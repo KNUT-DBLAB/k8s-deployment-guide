@@ -20,9 +20,10 @@ This guide explains how to deploy k8s(Kubernetes) cluster.
     - [3. Setup NAT](#3-setup-nat)
     - [4. Create VMs](#4-create-vms)
     - [5. Prepare VMs](#5-prepare-vms)
-    - [6. Prepare Kubespray](#6-prepare-kubespray)
-    - [7. Deploy k8s cluster](#7-deploy-k8s-cluster)
-    - [8. Access and use the k8s cluster from _Dev_ VM](#8-access-and-use-the-k8s-cluster-from-dev-vm)
+    - [6. Setup checkpoints for VMs](#6-setup-checkpoints-for-vms)
+    - [7. Prepare Kubespray](#7-prepare-kubespray)
+    - [8. Deploy k8s cluster](#8-deploy-k8s-cluster)
+    - [9. Access and use the k8s cluster from _Dev_ VM](#9-access-and-use-the-k8s-cluster-from-dev-vm)
 
 ---
 
@@ -135,12 +136,95 @@ Reference: _[This link](https://learn.microsoft.com/en-us/virtualization/hyper-v
     New-NetNat -Name NAT01 -InternalIPInterfaceAddressPrefix 172.30.0.0/24
     ```
 
+---
+
 ### 4. Create VMs
+
+1. Download the Latest Ubuntu Server LTS OS image, [at this link](https://ubuntu.com/download/server)
+2. Open _Hyper-V Manager_
+3. In Right side "Action" bar or in pull-down menu, select _Action_, _New_, _Virtual Machine..._
+    > It's not recommended to _Quick create_! it lacks of OS images
+4. Input spec of VMs
+
+    |Spec|Value|
+    |---|---|
+    |Name|`dev-01`, `k8s-01-cp`, `k8s-01-worker01`, `k8s-01-worker02`<br />(We will select multiple VMs with these names with wildcard string later)|
+    |Generation|2|
+    |Memory| `dev-01`: 1024MB with Dynamic Memory<br />`k8s-*`: 2048MB **without Dynamic Memory!!**|
+    |Network - Connection|`VMSwitch01` (What you made)|
+    |Virtual Hard Disk|80GB will be enough, and we can extend it later|
+    |Installation options|Select the downloaded Ubuntu Server image|
+
+5. DO NOT START THE VM YET
+6. Right click at the VM just made, click _Settings..._
+7. Input settings below
+
+    |Setting|Value|
+    |---|---|
+    |Security|**UNCHECK** all|
+    |Network Adapter - Advanced Features|MAC address: Static, `00-15-5D-FF-00-00` ~<br />(Make it in some rules for later convenience)|
+    |Checkpoints|Checkpoint File Location: If you have HDD, make a new directory in HDD<br />**Each of VMs need different directories, do not make them use same directory**|
+8. Now you're good to start VMs.
+
+---
 
 ### 5. Prepare VMs
 
-### 6. Prepare Kubespray
+1. Connect to VMs
+2. Set up user name and password
+3. Make all the VMs' hostname same as VM name, `dev-01`, `k8s-01-cp`...
+   1. You can use `hostnamectl` command
+4. Reboot (`sudo reboot now`)
+5. Setup network with _netplan_, [refer this link](https://netplan.io/examples)
+   1. Open _netplan_ setting file with _vim_ editor with super user
 
-### 7. Deploy k8s cluster
+        ```bash
+        sudo vim /etc/netplan/00-(file name)
+        ```
 
-### 8. Access and use the k8s cluster from _Dev_ VM
+   2. `dhcp4: false`
+   3. `addresses` to `172.30.0.xxx/24`, make them in some rules for later convenience
+   4. `nameservers - addresses: [8.8.8.8]`
+   5. `routes - via: 172.30.0.1` (Means gateway, make same as NAT address you made)
+   6. Save the setting file, and apply it
+
+        ```bash
+        sudo netplan apply
+        ```
+
+6. Reboot
+7. Check the internet (`sudo apt get update`, `sudo apt get upgrade`)
+8. Make ssh public key at _Dev_ VM (`dev-01`), and make k8s VMs available to access with ssh without password
+9. Make ssh public key from your host PC(Windows), and make all VMs available to access with ssh without password with PowerShell
+
+> From now on, do not use _Hyper-V Manager_ to connect VMs. Use SSH from _PowerShell_.
+
+---
+
+### 6. Setup checkpoints for VMs
+
+1. With _PowerShell_, Make a checkpoints of the VMs
+
+    ```powershell
+    Get-VM -Name "*01*" | ForEach-Object -Parallel {Checkpoint-VM $_ -SnapshotName "(checkpoint name)"}
+    ```
+
+2. When you need to restore the checkpoint, you can use command like below
+
+    ```powershell
+    Get-VM -Name "*01*" | ForEach-Object -Parallel {Restore-VMCheckpoint $_ -Name "(checkpoint name)" -Confirm:$false}
+    ```
+
+3. You can see the whole list of checkpoints of VM in _Hyper-V Manager_ GUI
+
+---
+
+### 7. Prepare Kubespray
+
+---
+
+### 8. Deploy k8s cluster
+
+---
+
+### 9. Access and use the k8s cluster from _Dev_ VM
