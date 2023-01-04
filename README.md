@@ -15,7 +15,7 @@ This guide explains how to deploy k8s(Kubernetes) cluster.
   - [Contents](#contents)
   - [Environment](#environment)
   - [Step by step guide](#step-by-step-guide)
-    - [1. Install _Windows Terminal_ and _Powershell 7_](#1-install-windows-terminal-and-powershell-7)
+    - [1. (Optional but recommended) Install _Windows Terminal_ and _Powershell 7_](#1-optional-but-recommended-install-windows-terminal-and-powershell-7)
     - [2. Install Hyper-V](#2-install-hyper-v)
     - [3. Setup NAT](#3-setup-nat)
     - [4. Create VMs](#4-create-vms)
@@ -31,6 +31,7 @@ This guide explains how to deploy k8s(Kubernetes) cluster.
 - Host PC
   - RAM: More than 10GB
   - OS: Windows 10 (Maybe 11 also supports Hyper-V)
+  - Virtualization function on BIOS should be turned on
 - Virtual machine(VM) hypervisor: **Hyper-V**
   - Reason for using Hyper-V
     - Easy to install in Windows
@@ -56,25 +57,40 @@ This guide explains how to deploy k8s(Kubernetes) cluster.
 
 ## Step by step guide
 
-### 1. Install _Windows Terminal_ and _Powershell 7_
+### 1. (Optional but recommended) Install _Windows Terminal_ and _Powershell 7_
+
+If you're using Windows 11, _Windows Terminal_ might be already installed.
+
+1. From _Microsoft Store_, install _Windows Terminal_: [Link here](https://www.microsoft.com/store/productId/9N0DX20HK701)
+2. From _Microsoft Store_, install _PowerShell_: [Link here](https://www.microsoft.com/store/productId/9MZ1SNWT0N5D)
+3. Reboot maybe required after installations
+4. Open _Run_ with <kbd>Windows</kbd> + <kbd>R</kbd>, type `wt` and run
+5. Open the _PowerShell_ tab, and make sure you're running version above 7
+
+    ![01-01.png](images/01-01.png)
 
 ### 2. Install Hyper-V
 
 1. In _Control panel_, _Programs and Features_, click _Turn Windows features on or off_
 
-    ![001.png](images/001.png)
+    ![02-01.png](images/02-01.png)
 
 2. Find _Hyper-V_, and check all of them
 
-    ![002.png](images/002.png)
+    ![02-02.png](images/02-02.png)
 
 3. Press _OK_, then the install process will begin. Reboot may required.
 4. After the installation finished, check the program installed. in _Start menu_, type `hyper-v` will show _Hyper-V Manager_. Click that and check the program opens up.
 
-    ![003.png](images/003.png)
-    ![004.png](images/004.png)
+    ![02-03.png](images/02-03.png)
+    ![02-04.png](images/02-04.png)
 
 ### 3. Setup NAT
+
+Refer _[This link](https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/user-guide/setup-nat-network)_
+
+1. Open a PowerShell console as Administrator
+    - <kbd>Windows</kbd>+<kbd>R</kbd>
 
 ### 4. Create VMs
 
