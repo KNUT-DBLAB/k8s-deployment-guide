@@ -2,6 +2,7 @@
 
 This guide explains how to deploy k8s(Kubernetes) cluster.
 
+- (Optional) Install Windows terminal and latest Powershell 7.
 - Deploy k8s cluster into local machine's virtual machines, using Hyper-V in Windows.
 - Make a VM for connect and develop, which is outside of the k8s cluster
 - Deploy k8s with _[Kubespray](https://kubespray.io/)_ for convenience
@@ -14,13 +15,14 @@ This guide explains how to deploy k8s(Kubernetes) cluster.
   - [Contents](#contents)
   - [Environment](#environment)
   - [Step by step guide](#step-by-step-guide)
-    - [1. Install Hyper-V](#1-install-hyper-v)
-    - [2. Setup NAT](#2-setup-nat)
-    - [3. Create VMs](#3-create-vms)
-    - [4. Prepare VMs](#4-prepare-vms)
-    - [5. Prepare Kubespray](#5-prepare-kubespray)
-    - [6. Deploy k8s cluster](#6-deploy-k8s-cluster)
-    - [7. Access and use the k8s cluster from _Dev_ VM](#7-access-and-use-the-k8s-cluster-from-dev-vm)
+    - [1. Install _Windows Terminal_ and _Powershell 7_](#1-install-windows-terminal-and-powershell-7)
+    - [2. Install Hyper-V](#2-install-hyper-v)
+    - [3. Setup NAT](#3-setup-nat)
+    - [4. Create VMs](#4-create-vms)
+    - [5. Prepare VMs](#5-prepare-vms)
+    - [6. Prepare Kubespray](#6-prepare-kubespray)
+    - [7. Deploy k8s cluster](#7-deploy-k8s-cluster)
+    - [8. Access and use the k8s cluster from _Dev_ VM](#8-access-and-use-the-k8s-cluster-from-dev-vm)
 
 ---
 
@@ -54,16 +56,32 @@ This guide explains how to deploy k8s(Kubernetes) cluster.
 
 ## Step by step guide
 
-### 1. Install Hyper-V
+### 1. Install _Windows Terminal_ and _Powershell 7_
 
-### 2. Setup NAT
+### 2. Install Hyper-V
 
-### 3. Create VMs
+1. In _Control panel_, _Programs and Features_, click _Turn Windows features on or off_
 
-### 4. Prepare VMs
+    ![001.png](images/001.png)
 
-### 5. Prepare Kubespray
+2. Find _Hyper-V_, and check all of them
 
-### 6. Deploy k8s cluster
+    ![002.png](images/002.png)
 
-### 7. Access and use the k8s cluster from _Dev_ VM
+3. Press _OK_, then the install process will begin. Reboot may required.
+4. After the installation finished, check the program installed. in _Start menu_, type `hyper-v` will show _Hyper-V Manager_. Click that and check the program opens up.
+
+    ![003.png](images/003.png)
+    ![004.png](images/004.png)
+
+### 3. Setup NAT
+
+### 4. Create VMs
+
+### 5. Prepare VMs
+
+### 6. Prepare Kubespray
+
+### 7. Deploy k8s cluster
+
+### 8. Access and use the k8s cluster from _Dev_ VM
