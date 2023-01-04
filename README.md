@@ -64,10 +64,12 @@ If you're using Windows 11, _Windows Terminal_ might be already installed.
 1. From _Microsoft Store_, install _Windows Terminal_: [Link here](https://www.microsoft.com/store/productId/9N0DX20HK701)
 2. From _Microsoft Store_, install _PowerShell_: [Link here](https://www.microsoft.com/store/productId/9MZ1SNWT0N5D)
 3. Reboot maybe required after installations
-4. Open _Run_ with <kbd>Windows</kbd> + <kbd>R</kbd>, type `wt` and run
+4. Open _Run_ with <kbd>Win</kbd> + <kbd>R</kbd>, type `wt` and run
 5. Open the _PowerShell_ tab, and make sure you're running version above 7
 
     ![01-01.png](images/01-01.png)
+
+---
 
 ### 2. Install Hyper-V
 
@@ -85,12 +87,53 @@ If you're using Windows 11, _Windows Terminal_ might be already installed.
     ![02-03.png](images/02-03.png)
     ![02-04.png](images/02-04.png)
 
+---
+
 ### 3. Setup NAT
 
-Refer _[This link](https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/user-guide/setup-nat-network)_
+Reference: _[This link](https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/user-guide/setup-nat-network)_
 
-1. Open a PowerShell console as Administrator
-    - <kbd>Windows</kbd>+<kbd>R</kbd>
+> With setting up _NAT_, we're making an isolated internal(local) network for VMs, with making them can access internet of your host PC.
+
+1. Open a PowerShell console as Administrator.
+    - <kbd>Win</kbd> + <kbd>R</kbd>, type `wt`, <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Enter</kbd>
+    - Check the PowerShell version is above 7.
+2. Create an internal switch
+
+    ```powershell
+    New-VMSwitch -SwitchName "VMSwitch01" -SwitchType Internal
+    ```
+
+3. Find the interface index of the virtual switch you just created, by `Get-NetAdapter`
+
+    ```powershell
+    PS C:\> Get-NetAdapter
+    
+    Name                  InterfaceDescription               ifIndex Status       MacAddress           LinkSpeed
+    ----                  --------------------               ------- ------       ----------           ---------
+    ...
+    vEthernet (VMSwitch01) Hyper-V Virtual Ethernet Adapter        20 Up           00-15-5D-00-6A-01      10 Gbps
+    ...
+    ```
+
+    - Find it by name `VMSwitch01`, and remember the `ifIndex` value.
+    In this case, the index is "20".
+
+4. Configure the NAT gateway using `New-NetIPAddress`.
+
+    ```powershell
+    New-NetIPAddress -IPAddress 172.30.0.1 -PrefixLength 24 -InterfaceIndex 20
+    ```
+
+    - Input IP address for internal network. Begin with `172.30.~` is recommended for avoid address collision.
+    - `-PrefixLength 24` means _Subnet mask_ is `255.255.255.0`, _CIDR_ is `/24`. [Refer this link for futher understanding.](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#IPv4_CIDR_blocks)
+    - `-InterfaceIndex` should be the index number of the switch you made.
+
+5. Configure the NAT network using New-NetNat.
+
+    ```powershell
+    New-NetNat -Name NAT01 -InternalIPInterfaceAddressPrefix 172.30.0.0/24
+    ```
 
 ### 4. Create VMs
 
