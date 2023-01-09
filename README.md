@@ -11,19 +11,19 @@ This guide explains how to deploy k8s(Kubernetes) cluster.
 
 ## Contents
 
-- [k8s deployment guide](#k8s-deployment-guide)
-  - [Contents](#contents)
-  - [Environment](#environment)
-  - [Step by step guide](#step-by-step-guide)
-    - [1. (Optional but recommended) Install _Windows Terminal_ and _Powershell 7_](#1-optional-but-recommended-install-windows-terminal-and-powershell-7)
-    - [2. Install Hyper-V](#2-install-hyper-v)
-    - [3. Setup NAT](#3-setup-nat)
-    - [4. Create VMs](#4-create-vms)
-    - [5. Prepare VMs](#5-prepare-vms)
-    - [6. Setup checkpoints for VMs](#6-setup-checkpoints-for-vms)
-    - [7. Prepare Kubespray](#7-prepare-kubespray)
-    - [8. Deploy k8s cluster](#8-deploy-k8s-cluster)
-    - [9. Access and use the k8s cluster from _Dev_ VM](#9-access-and-use-the-k8s-cluster-from-dev-vm)
+1. [k8s deployment guide](#k8s-deployment-guide)
+   1. [Contents](#contents)
+   2. [Environment](#environment)
+   3. [Step by step guide](#step-by-step-guide)
+      1. [1. (Optional but recommended) Install _Windows Terminal_ and _Powershell 7_](#1-optional-but-recommended-install-windows-terminal-and-powershell-7)
+      2. [2. Install Hyper-V](#2-install-hyper-v)
+      3. [3. Setup NAT](#3-setup-nat)
+      4. [4. Create VMs](#4-create-vms)
+      5. [5. Prepare VMs](#5-prepare-vms)
+      6. [6. Setup checkpoints for VMs](#6-setup-checkpoints-for-vms)
+      7. [7. Prepare Kubespray](#7-prepare-kubespray)
+      8. [8. Deploy k8s cluster](#8-deploy-k8s-cluster)
+      9. [9. Access and use the k8s cluster from _Dev_ VM](#9-access-and-use-the-k8s-cluster-from-dev-vm)
 
 ---
 
@@ -194,8 +194,10 @@ Reference: _[This link](https://learn.microsoft.com/en-us/virtualization/hyper-v
 
 6. Reboot
 7. Check the internet (`sudo apt get update`, `sudo apt get upgrade`)
-8. Make ssh public key at _Dev_ VM (`dev-01`), and make k8s VMs available to access with ssh without password
-9. Make ssh public key from your host PC(Windows), and make all VMs available to access with ssh without password with PowerShell
+8. **TURN OF SWAP MEMORY!** It's required for k8s environment. You can do it with editing `/etc/fstab` file.
+9. Make ssh public key at _Dev_ VM (`dev-01`), and make k8s VMs available to access with ssh without password
+10. Make ssh public key from your host PC(Windows), and make all VMs available to access with ssh without password with PowerShell
+11. You can make a profile for Windows Terminal for SSH, put ssh command in "Command line".
 
 > From now on, do not use _Hyper-V Manager_ to connect VMs. Use SSH from _PowerShell_.
 
@@ -221,10 +223,107 @@ Reference: _[This link](https://learn.microsoft.com/en-us/virtualization/hyper-v
 
 ### 7. Prepare Kubespray
 
+We will use "Kubespray" in _Dev_ VM.
+
+You can refer the original official guide from [this link](https://kubespray.io/#/docs/getting-started).
+
+1. Install python, as you can use `python` and `pip`
+2. Clone Kubespray source from GitHub from [this link](https://github.com/kubernetes-sigs/kubespray). We will work at the root directory of the cloned repository.
+3. Install required python packages using `requirements.txt` or `requirement-(version).txt`
+
+    ```bash
+    pip install -U -r requirements.txt
+    ```
+
+4. Copy `inventory/sample` directory to `inventory/mycluster` (or you can use a directory name you want)
+
+    ```bash
+    cp -r inventory/sample inventory/mycluster
+    ```
+
+5. Declare variables for IP addresses in shell.
+
+    ```bash
+    declare -a IPS=(172.30.0.10 172.30.0.11 172.30.0.12)
+    ```
+
+6. Run python script to make `hosts.yml` file.
+
+    ```bash
+    CONFIG_FILE=inventory/mycluster/hosts.yml python3 contrib/inventory_builder/inventory.py ${IPS[@]}
+    ```
+
+7. Edit `hosts.yml` like below.
+
+    ```yml
+    all:
+      hosts:
+        k8s-01-cp:
+          ansible_host: 172.30.0.10
+          ip: 172.30.0.10
+          access_ip: 172.30.0.10
+        k8s-01-worker01:
+          ansible_host: 172.30.0.11
+          ip: 172.30.0.11
+          access_ip: 172.30.0.11
+        k8s-01-worker02:
+          ansible_host: 172.30.0.12
+          ip: 172.30.0.12
+          access_ip: 172.30.0.12
+      children:
+        kube_control_plane:
+          hosts:
+            k8s-01-cp:
+        kube_node:
+          hosts:
+            k8s-01-worker01:
+            k8s-01-worker02:
+        etcd:
+          hosts:
+            k8s-01-cp:
+        k8s_cluster:
+          children:
+            kube_control_plane:
+            kube_node:
+        calico_rr:
+          hosts: {}
+    ```
+
+8. Edit `inventory/mycluster/group_vars/k8s_cluster/k8s-cluster.yml` file
+   1. (Optional) Select k8s version at line number 20 (or near)
+
+        ```yml
+         20 | kube_version: v1.25.3
+        ```
+
+   2. Select `flannel` CNI at line number 70 (or near)
+
+        ```yml
+         70 | kube_network_plugin: flannel
+        ```
+
+   3. Select `crio` CRI at line number 221 (or near)
+
+        ```yml
+        221 | container_manager: crio
+        ```
+
 ---
 
 ### 8. Deploy k8s cluster
 
+1. Run command like below. It might take about 20 minutes.
+
+    ```bash
+    ansible-playbook -i inventory/mycluster/hosts.yaml -u root --become --become-user=root cluster.yml
+    ```
+
+2. Check the installed log whether there are some failures.
+
 ---
 
 ### 9. Access and use the k8s cluster from _Dev_ VM
+
+1. Install `kubectl`, refer [this link](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/install-kubeadm/#k8s-install-0) but install only `kubectl`. Be careful you should match the version of k8s cluster and `kubectl`.
+2. Copy `/etc/kubernetes/admin.conf` file from _CP_ VM, to `$HOME/.kube/config` file in _Dev_ VM.
+3. Install additional tools like `podman` and `k9s`, you can search how to install them
