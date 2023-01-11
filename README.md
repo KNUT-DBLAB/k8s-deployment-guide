@@ -290,19 +290,20 @@ You can refer the original official guide from [this link](https://kubespray.io/
     ```
 
 8. Edit `inventory/mycluster/group_vars/k8s_cluster/k8s-cluster.yml` file
-   1. (Optional) Select k8s version at line number 20 (or near)
+   1. Check supported versions from [this link](https://github.com/kubernetes-sigs/kubespray#supported-components)
+   2. (Optional) Select k8s version at line number 20 (or near)
 
         ```yml
-         20 | kube_version: v1.25.3
+         20 | kube_version: v1.24.9
         ```
 
-   2. Select `flannel` CNI at line number 70 (or near)
+   3. Select `flannel` CNI at line number 70 (or near)
 
         ```yml
          70 | kube_network_plugin: flannel
         ```
 
-   3. Select `crio` CRI at line number 221 (or near)
+   4. Select `crio` CRI at line number 221 (or near)
 
         ```yml
         221 | container_manager: crio
